@@ -1,0 +1,7 @@
+
+*.o
+*.bundle
+*.gem
+*.log
+Gemfile.lock
+
