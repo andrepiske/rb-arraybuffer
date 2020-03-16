@@ -129,6 +129,23 @@ t_bb_realloc(VALUE self, VALUE _new_size) {
   return self;
 }
 
+/*
+ * Returns a ASCII-8BIT string with the contents of the buffer
+ *
+ * The returned string is a copy of the buffer. It's encoding is always
+ * ASCII-8BIT.
+ * If the buffer has size zero, an empty string is returned.
+ *
+ * @return [String]
+ */
+static VALUE
+t_bb_bytes(VALUE self) {
+  DECLAREBB(self);
+  return rb_tainted_str_new(
+    (const char*)bb->ptr,
+    bb->size);
+}
+
 void
 Init_bytebuffer() {
   cByteBuffer = rb_define_class_under(mLLC, "ByteBuffer", rb_cObject);
@@ -142,4 +159,5 @@ Init_bytebuffer() {
   rb_define_alias(cByteBuffer, "length", "size");
   rb_define_method(cByteBuffer, "each", t_bb_each, 0);
   rb_define_method(cByteBuffer, "realloc", t_bb_realloc, 1);
+  rb_define_method(cByteBuffer, "bytes", t_bb_bytes, 0);
 }
