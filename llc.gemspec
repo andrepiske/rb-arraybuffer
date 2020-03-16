@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.files         = Dir.glob([ "lib/**/*", "ext/**/*", "extconf.h" ])
   spec.name          = "llc"
   spec.require_paths = ["lib"]
-  spec.version       = "0.0.1"
+  spec.version       = "0.0.2"
 
   spec.required_ruby_version = ">= 2.1"
 
