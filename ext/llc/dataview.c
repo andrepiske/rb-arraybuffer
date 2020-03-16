@@ -91,9 +91,9 @@ t_dv_initialize(int argc, VALUE *argv, VALUE self) {
 
   int offset_val = NIL_P(offset) ? 0 : NUM2INT(offset);
   if (offset_val < 0)
-    offset_val += size_val;
+    offset_val += (int)bb->size;
   if (offset_val < 0)
-    rb_raise(rb_eArgError, "calculated offset is negative: %d", size_val);
+    rb_raise(rb_eArgError, "calculated offset is negative: %d", offset_val);
 
   dv->offset = (unsigned long)offset_val;
   dv->size = (unsigned long)size_val;
@@ -460,11 +460,11 @@ Init_dataview() {
   rb_define_method(cDataView, "setU32", t_dv_setu32, 2);
 
   rb_define_method(cDataView, "endianess", t_dv_endianess, 0);
+  rb_define_method(cDataView, "offset=", t_dv_setoffset, 1);
   rb_define_method(cDataView, "offset", t_dv_offset, 0);
+  rb_define_method(cDataView, "size=", t_dv_setsize, 1);
+  rb_define_alias(cDataView, "length=", "size=");
   rb_define_method(cDataView, "size", t_dv_size, 0);
   rb_define_alias(cDataView, "length", "size");
   rb_define_method(cDataView, "each", t_dv_each, 0);
-
-  // rb_define_method(cDataView, "reoffset", t_dv_realloc, 1);
-  // rb_define_method(cDataView, "resize", t_dv_realloc, 1);
 }

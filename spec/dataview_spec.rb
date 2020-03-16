@@ -210,19 +210,112 @@ describe LLC::DataView do
     end
   end
 
+  shared_examples "offset out of bounds" do
+    context "when offset is greater than the underlying buffer" do
+      let(:offset) { 1000 }
+      it "accepts the value" do
+        expect(subject.offset).to eq(1000)
+      end
+    end
+
+    context "when calculated offset is negative" do
+      let(:offset) { -1000 }
+      it "raises" do
+        expect { subject }.to raise_error(ArgumentError,
+        /calculated offset is negative: -[0-9]+/)
+      end
+    end
+
+    context "when offset is negative" do
+      let(:offset) { -3 }
+      it "has the correct value" do
+        expect(subject.offset).to eq(buffer_data.length - 3)
+      end
+    end
+  end
+
+  shared_examples "length out of bounds" do
+    context "when size is greater than the underlying buffer" do
+      let(:length) { 1000 }
+      it "accepts the value" do
+        expect(subject.size).to eq(1000)
+      end
+    end
+
+    context "when calculated size is negative" do
+      let(:length) { -1000 }
+      it "raises" do
+        expect { subject }.to raise_error(ArgumentError,
+          /calculated size is negative: -[0-9]+/)
+      end
+    end
+
+    context "when size is negative" do
+      let(:length) { -3 }
+      it "has the correct value" do
+        expect(subject.size).to eq(buffer_data.length - 3)
+      end
+    end
+  end
+
   context "basic specs" do
     let(:length) { 8 }
     let(:offset) { 2 }
     let(:dv) { described_class.new(buffer, offset, length) }
+
+    describe "initialize" do
+      subject { dv }
+
+      it_behaves_like "length out of bounds"
+      it_behaves_like "offset out of bounds"
+    end
 
     describe "length" do
       subject { dv.length }
       it { is_expected.to eq(length) }
     end
 
+    describe "length=" do
+      context "within reasonable bounds" do
+        before do
+          dv.length = 1
+        end
+
+        subject { dv.length }
+        it { is_expected.to eq(1) }
+      end
+
+      it_behaves_like "length out of bounds" do
+        let(:dv) { described_class.new(buffer, 2, 3) }
+        subject do
+          dv.length = length
+          dv
+        end
+      end
+    end
+
     describe "offset" do
       subject { dv.offset }
       it { is_expected.to be(offset) }
+    end
+
+    describe "offset=" do
+      context "within reasonable bounds" do
+        before do
+          dv.offset = 3
+        end
+
+        subject { dv.offset }
+        it { is_expected.to be(3) }
+      end
+
+      it_behaves_like "offset out of bounds" do
+        let(:dv) { described_class.new(buffer, 2, 3) }
+        subject do
+          dv.offset = offset
+          dv
+        end
+      end
     end
 
     describe "endianess" do
