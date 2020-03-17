@@ -10,7 +10,7 @@ jobs:
       - checkout
       - run:
           name: Generate Makefile
-          command: ruby ext/llc/extconf.rb
+          command: ruby ext/arraybuffer/extconf.rb
       - run:
           name: Compile gem
           command: make
