@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe LLC::ByteBuffer do
+describe ArrayBuffer do
   let(:buffer_bytes) { Random.bytes(16) }
   let(:buffer_data) { buffer_bytes.split('').map(&:ord) }
   let(:buffer) { described_class.new(buffer_data.length) }

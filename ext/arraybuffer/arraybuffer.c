@@ -1,15 +1,11 @@
-#include "bytebuffer.h"
+#include "arraybuffer.h"
 #include "extconf.h"
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
 
-extern VALUE cByteBuffer;
-extern VALUE mLLC;
+extern VALUE cArrayBuffer;
 
 #define DECLAREBB(self) \
-  struct LLC_ByteBuffer *bb = (struct LLC_ByteBuffer*)rb_data_object_get((self))
+  struct LLC_ArrayBuffer *bb = (struct LLC_ArrayBuffer*)rb_data_object_get((self))
 
 #define CHECKBOUNDS(bb, idx) \
   if (!(bb)->ptr || (idx) < 0 || (idx) >= (bb)->size) { \
@@ -17,11 +13,11 @@ extern VALUE mLLC;
   }
 
 static void
-t_bb_gc_mark(struct LLC_ByteBuffer *bb) {
+t_bb_gc_mark(struct LLC_ArrayBuffer *bb) {
 }
 
 static void
-t_bb_free(struct LLC_ByteBuffer *bb) {
+t_bb_free(struct LLC_ArrayBuffer *bb) {
   if (bb->ptr)
     xfree(bb->ptr);
 
@@ -30,7 +26,7 @@ t_bb_free(struct LLC_ByteBuffer *bb) {
 
 static VALUE
 t_bb_allocator(VALUE klass) {
-  struct LLC_ByteBuffer *bb = (struct LLC_ByteBuffer*)xmalloc(sizeof(struct LLC_ByteBuffer));
+  struct LLC_ArrayBuffer *bb = (struct LLC_ArrayBuffer*)xmalloc(sizeof(struct LLC_ArrayBuffer));
   bb->ptr = NULL;
   bb->size = 0;
 
@@ -147,17 +143,17 @@ t_bb_bytes(VALUE self) {
 }
 
 void
-Init_bytebuffer() {
-  cByteBuffer = rb_define_class_under(mLLC, "ByteBuffer", rb_cObject);
-  rb_define_alloc_func(cByteBuffer, t_bb_allocator);
-  rb_include_module(cByteBuffer, rb_mEnumerable);
+Init_arraybuffer() {
+  cArrayBuffer = rb_define_class("ArrayBuffer", rb_cObject);
+  rb_define_alloc_func(cArrayBuffer, t_bb_allocator);
+  rb_include_module(cArrayBuffer, rb_mEnumerable);
 
-  rb_define_method(cByteBuffer, "initialize", t_bb_initialize, 1);
-  rb_define_method(cByteBuffer, "[]", t_bb_getbyte, 1);
-  rb_define_method(cByteBuffer, "[]=", t_bb_setbyte, 2);
-  rb_define_method(cByteBuffer, "size", t_bb_size, 0);
-  rb_define_alias(cByteBuffer, "length", "size");
-  rb_define_method(cByteBuffer, "each", t_bb_each, 0);
-  rb_define_method(cByteBuffer, "realloc", t_bb_realloc, 1);
-  rb_define_method(cByteBuffer, "bytes", t_bb_bytes, 0);
+  rb_define_method(cArrayBuffer, "initialize", t_bb_initialize, 1);
+  rb_define_method(cArrayBuffer, "[]", t_bb_getbyte, 1);
+  rb_define_method(cArrayBuffer, "[]=", t_bb_setbyte, 2);
+  rb_define_method(cArrayBuffer, "size", t_bb_size, 0);
+  rb_define_alias(cArrayBuffer, "length", "size");
+  rb_define_method(cArrayBuffer, "each", t_bb_each, 0);
+  rb_define_method(cArrayBuffer, "realloc", t_bb_realloc, 1);
+  rb_define_method(cArrayBuffer, "bytes", t_bb_bytes, 0);
 }

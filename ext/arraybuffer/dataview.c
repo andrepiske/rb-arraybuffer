@@ -1,14 +1,13 @@
 #include "dataview.h"
-#include "bytebuffer.h"
+#include "arraybuffer.h"
 #include "extconf.h"
 
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
 
-extern VALUE cByteBuffer;
+extern VALUE cArrayBuffer;
 extern VALUE cDataView;
-extern VALUE mLLC;
 
 static ID idEndianess = Qundef;
 static ID idBig = Qundef;
@@ -19,7 +18,7 @@ static ID idLittle = Qundef;
 #define DECLAREDV(o) \
   struct LLC_DataView *dv = (struct LLC_DataView*)rb_data_object_get((o))
 #define DECLAREBB(o) \
-  struct LLC_ByteBuffer *bb = (struct LLC_ByteBuffer*)rb_data_object_get((o))
+  struct LLC_ArrayBuffer *bb = (struct LLC_ArrayBuffer*)rb_data_object_get((o))
 #define CHECK_LITTLEENDIAN(dv) ((dv)->flags & FLAG_LITTLE_ENDIAN)
 
 static void
@@ -47,10 +46,10 @@ t_dv_allocator(VALUE klass) {
  * call-seq:
  *  initialize(buffer, offset, size, endianess:)
  *
- * Constructs a new DataView that provides a view of the data in a ByteBuffer.
+ * Constructs a new DataView that provides a view of the data in a ArrayBuffer.
  *
  * Example:
- *   buffer = ByteBuffer.new(10)
+ *   buffer = ArrayBuffer.new(10)
  *   buffer[1] = 20
  *   buffer[2] = 55
  *   view = DataView.new(buffer, 1, endianess: :little)
@@ -61,11 +60,11 @@ t_dv_allocator(VALUE klass) {
  *   view = DataView.new(buffer, 1) # default endianess is "big endian"
  *   view.getU8() == ( (20 << 8) | 55 ) # true
  *
- * @param buffer [ByteBuffer] The byte buffer where to operate
- * @param offset [Integer] Optional. The byte offset from the byte buffer. The
+ * @param buffer [ArrayBuffer] The array buffer where to operate
+ * @param offset [Integer] Optional. The byte offset from the array buffer. The
  *   default value is zero
  * @param size [Integer] Optional. The size in bytes that this DataView can
- *   see into the byte buffer. If left blank, the current size of the byte
+ *   see into the array buffer. If left blank, the current size of the array
  *   buffer will be used
  * @param endianess [:big, :little] Optional. The default value is big
  *
@@ -437,13 +436,11 @@ t_dv_setu32(VALUE self, VALUE index, VALUE value) {
 
 void
 Init_dataview() {
-  mLLC = rb_define_module("LLC");
-
   idEndianess = rb_intern("endianess");
   idLittle = rb_intern("little");
   idBig = rb_intern("big");
 
-  cDataView = rb_define_class_under(mLLC, "DataView", rb_cObject);
+  cDataView = rb_define_class("DataView", rb_cObject);
   rb_define_alloc_func(cDataView, t_dv_allocator);
   rb_include_module(cDataView, rb_mEnumerable);
 

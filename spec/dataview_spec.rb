@@ -1,9 +1,9 @@
 require "spec_helper"
 
-describe LLC::DataView do
+describe DataView do
 
   let(:buffer_data) { [1, 20, 255, 4, 32, 27, 175, 88, 99, 192, 32, 12, 0, 49] }
-  let(:buffer) { LLC::ByteBuffer.new(buffer_data.length) }
+  let(:buffer) { ArrayBuffer.new(buffer_data.length) }
 
   before do
     buffer_data.each_with_index do |v, idx|
