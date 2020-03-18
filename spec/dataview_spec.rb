@@ -210,6 +210,35 @@ describe DataView do
     end
   end
 
+  describe "setBytes" do
+    let(:dv) { described_class.new(buffer, 1) }
+    let(:new_bytes) { [40, 0, 13, 25, 250, 127, 128] }
+    let(:expected_bytes) { [1, 40, 0, 13, 25, 250, 127, 128, 99, 192, 32, 12, 0, 49] }
+
+    context "when argument is an array" do
+      it "sets the bytes" do
+        dv.setBytes(0, new_bytes)
+        expect(buffer.bytes.split('').map(&:ord)).to eq(expected_bytes)
+      end
+    end
+
+    context "when argument is a string" do
+      it "sets the bytes" do
+        dv.setBytes(0, new_bytes.map(&:chr).join)
+        expect(buffer.bytes.split('').map(&:ord)).to eq(expected_bytes)
+      end
+    end
+
+    context "when argument is an utf-8 string" do
+      let(:expected_bytes) { [1, 233, 139, 184, 105, 27, 175, 88, 99, 192, 32, 12, 0, 49] }
+
+      it "sets the bytes" do
+        dv.setBytes(0, "鋸i")
+        expect(buffer.bytes.split('').map(&:ord)).to eq(expected_bytes)
+      end
+    end
+  end
+
   shared_examples "offset out of bounds" do
     context "when offset is greater than the underlying buffer" do
       let(:offset) { 1000 }

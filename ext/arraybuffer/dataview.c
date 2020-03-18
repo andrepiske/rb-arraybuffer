@@ -434,6 +434,37 @@ t_dv_setu32(VALUE self, VALUE index, VALUE value) {
   return self;
 }
 
+static VALUE
+t_dv_setbytes(VALUE self, VALUE index, VALUE bytes) {
+  DECLAREDV(self); DECLARENCHECKIDX(index); DECLAREBB(dv->bb_obj);
+  unsigned int idx0 = dv->offset + (unsigned int)idx;
+  CHECKBOUNDSBB(idx0);
+
+  if (RB_TYPE_P(bytes, T_ARRAY)) {
+    const unsigned int length = (unsigned int)rb_array_len(bytes);
+    const VALUE* items = rb_array_const_ptr(bytes);
+    CHECKBOUNDSBB(idx0 + length);
+
+    for (unsigned int i = 0; i < length; i++) {
+      int num = NUM2INT(items[i]);
+      ADJUSTBOUNDS(num, 0xFF);
+      bb->ptr[idx0 + i] = (unsigned char)num;
+    }
+  } else if (RB_TYPE_P(bytes, T_STRING)) {
+    const char *str_ptr = RSTRING_PTR(bytes);
+    const unsigned int length = (unsigned int)RSTRING_LEN(bytes);
+    CHECKBOUNDSBB(idx0 + length);
+
+    for (unsigned int i = 0; i < length; i++) {
+      bb->ptr[idx0 + i] = (unsigned char)str_ptr[i];
+    }
+  } else {
+    rb_raise(rb_eArgError, "Invalid type");
+  }
+
+  return self;
+}
+
 void
 Init_dataview() {
   idEndianess = rb_intern("endianess");
@@ -455,6 +486,7 @@ Init_dataview() {
   rb_define_method(cDataView, "setU16", t_dv_setu16, 2);
   rb_define_method(cDataView, "setU24", t_dv_setu24, 2);
   rb_define_method(cDataView, "setU32", t_dv_setu32, 2);
+  rb_define_method(cDataView, "setBytes", t_dv_setbytes, 2);
 
   rb_define_method(cDataView, "endianess", t_dv_endianess, 0);
   rb_define_method(cDataView, "offset=", t_dv_setoffset, 1);
