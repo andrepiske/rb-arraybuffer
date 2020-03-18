@@ -215,6 +215,16 @@ describe DataView do
     let(:new_bytes) { [40, 0, 13, 25, 250, 127, 128] }
     let(:expected_bytes) { [1, 40, 0, 13, 25, 250, 127, 128, 99, 192, 32, 12, 0, 49] }
 
+    context "with non-zero index" do
+      let(:new_bytes) { [40, 0, 3] }
+      let(:expected_bytes) { [1, 20, 255, 40, 0, 3, 175, 88, 99, 192, 32, 12, 0, 49] }
+
+      it "just works" do
+        dv.setBytes(2, new_bytes)
+        expect(buffer.bytes.split('').map(&:ord)).to eq(expected_bytes)
+      end
+    end
+
     context "when argument is an array" do
       it "sets the bytes" do
         dv.setBytes(0, new_bytes)
