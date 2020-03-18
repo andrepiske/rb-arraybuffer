@@ -3,7 +3,9 @@
 Gem::Specification.new do |s|
   s.name          = "arraybuffer"
   s.license       = "MIT"
-  s.summary       = "Low level byte operators and buffers"
+  s.summary       = "An array buffer (a.k.a. byte array) implementation for" \
+                  + "Ruby, implemented natively."
+
   s.authors       = ["André Diego Piske"]
   s.email         = ["andrepiske@gmail.com"]
   s.homepage      = "https://github.com/andrepiske/rb-arraybuffer"
