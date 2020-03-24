@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
 
   s.files         = Dir.glob([ "lib/**/*", "ext/**/*", "extconf.h" ])
   s.require_paths = ["lib"]
-  s.version       = "0.0.3"
+  s.version       = "0.0.4"
 
   s.metadata      = {
     "source_code_uri" => "https://github.com/andrepiske/rb-arraybuffer",
