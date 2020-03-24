@@ -210,6 +210,82 @@ describe DataView do
     end
   end
 
+  describe "setBytes" do
+    let(:dv) { described_class.new(buffer, 1) }
+    let(:new_bytes) { [40, 0, 13, 25, 250, 127, 128] }
+    let(:expected_bytes) { [1, 40, 0, 13, 25, 250, 127, 128, 99, 192, 32, 12, 0, 49] }
+
+    context "when array contain non numbers" do
+      before { new_bytes[4] = "foo" }
+
+      it "raises an error" do
+        expect { dv.setBytes(0, new_bytes) }.to raise_error(RuntimeError,
+          /array contains non fixnum value at index 4/)
+      end
+    end
+
+    context "with non-zero index" do
+      let(:new_bytes) { [40, 0, 3] }
+      let(:expected_bytes) { [1, 20, 255, 40, 0, 3, 175, 88, 99, 192, 32, 12, 0, 49] }
+
+      it "just works" do
+        dv.setBytes(2, new_bytes)
+        expect(buffer.bytes.split('').map(&:ord)).to eq(expected_bytes)
+      end
+    end
+
+    context "when argument is an array" do
+      it "sets the bytes" do
+        dv.setBytes(0, new_bytes)
+        expect(buffer.bytes.split('').map(&:ord)).to eq(expected_bytes)
+      end
+    end
+
+    context "when argument is a string" do
+      it "sets the bytes" do
+        dv.setBytes(0, new_bytes.map(&:chr).join)
+        expect(buffer.bytes.split('').map(&:ord)).to eq(expected_bytes)
+      end
+    end
+
+    context "when argument is an ArrayBuffer" do
+      let(:new_bytes_buffer) do
+        ArrayBuffer.new(new_bytes.length).tap do |buf|
+          new_bytes.each_with_index { |val, i| buf[i] = val }
+        end
+      end
+
+      it "sets the bytes" do
+        dv.setBytes(0, new_bytes_buffer)
+        expect(buffer.bytes.split('').map(&:ord)).to eq(expected_bytes)
+      end
+    end
+
+    context "when argument is a DataView" do
+      let(:src_offset) { 130 }
+      let(:new_bytes_buffer) do
+        ArrayBuffer.new(200).tap do |buf|
+          new_bytes.each_with_index { |val, i| buf[i + src_offset] = val }
+        end
+      end
+      let(:new_bytes_view) { DataView.new(new_bytes_buffer, src_offset, new_bytes.length) }
+
+      it "sets the bytes" do
+        dv.setBytes(0, new_bytes_view)
+        expect(buffer.bytes.split('').map(&:ord)).to eq(expected_bytes)
+      end
+    end
+
+    context "when argument is an utf-8 string" do
+      let(:expected_bytes) { [1, 233, 139, 184, 105, 27, 175, 88, 99, 192, 32, 12, 0, 49] }
+
+      it "sets the bytes" do
+        dv.setBytes(0, "鋸i")
+        expect(buffer.bytes.split('').map(&:ord)).to eq(expected_bytes)
+      end
+    end
+  end
+
   shared_examples "offset out of bounds" do
     context "when offset is greater than the underlying buffer" do
       let(:offset) { 1000 }
