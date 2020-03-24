@@ -215,6 +215,15 @@ describe DataView do
     let(:new_bytes) { [40, 0, 13, 25, 250, 127, 128] }
     let(:expected_bytes) { [1, 40, 0, 13, 25, 250, 127, 128, 99, 192, 32, 12, 0, 49] }
 
+    context "when array contain non numbers" do
+      before { new_bytes[4] = "foo" }
+
+      it "raises an error" do
+        expect { dv.setBytes(0, new_bytes) }.to raise_error(RuntimeError,
+          /array contains non fixnum value at index 4/)
+      end
+    end
+
     context "with non-zero index" do
       let(:new_bytes) { [40, 0, 3] }
       let(:expected_bytes) { [1, 20, 255, 40, 0, 3, 175, 88, 99, 192, 32, 12, 0, 49] }

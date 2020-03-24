@@ -446,6 +446,8 @@ t_dv_setbytes(VALUE self, VALUE index, VALUE bytes) {
     CHECKBOUNDSBB(idx0 + length);
 
     for (unsigned int i = 0; i < length; i++) {
+      if (!RB_FIXNUM_P(items[i]))
+        rb_raise(rb_eRuntimeError, "array contains non fixnum value at index %d", i);
       int num = NUM2INT(items[i]);
       ADJUSTBOUNDS(num, 0xFF);
       bb->ptr[idx0 + i] = (unsigned char)num;
