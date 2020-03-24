@@ -458,8 +458,29 @@ t_dv_setbytes(VALUE self, VALUE index, VALUE bytes) {
     for (unsigned int i = 0; i < length; i++) {
       bb->ptr[idx0 + i] = (unsigned char)str_ptr[i];
     }
+  } else if (RB_TYPE_P(bytes, T_DATA) &&
+    (CLASS_OF(bytes) == cArrayBuffer || CLASS_OF(bytes) == cDataView)) {
+    unsigned int length;
+    const char *src_bytes;
+    if (CLASS_OF(bytes) == cArrayBuffer) {
+      struct LLC_ArrayBuffer *src_bb = (struct LLC_ArrayBuffer*)rb_data_object_get(bytes);
+      length = src_bb->size;
+      src_bytes = (const char*)src_bb->ptr;
+    } else {
+      struct LLC_DataView *src_dv = (struct LLC_DataView*)rb_data_object_get(bytes);
+      struct LLC_ArrayBuffer *src_bb = (struct LLC_ArrayBuffer*)rb_data_object_get(src_dv->bb_obj);
+      length = src_dv->size;
+      src_bytes = (const char*)(src_bb->ptr + (size_t)src_dv->offset);
+      if (src_dv->offset >= src_bb->size)
+        rb_raise(rb_eRuntimeError, "offset exceeds the underlying source buffer size");
+      if (src_dv->offset + length >= src_bb->size)
+        rb_raise(rb_eRuntimeError, "offset + size exceeds the underlying source buffer size");
+    }
+
+    CHECKBOUNDSBB(idx0 + length);
+    memcpy((void*)(bb->ptr + (size_t)idx0), src_bytes, (size_t)length);
   } else {
-    rb_raise(rb_eArgError, "Invalid type");
+    rb_raise(rb_eArgError, "Invalid type: %+"PRIsVALUE, CLASS_OF(bytes));
   }
 
   return self;
@@ -486,6 +507,7 @@ Init_dataview() {
   rb_define_method(cDataView, "setU16", t_dv_setu16, 2);
   rb_define_method(cDataView, "setU24", t_dv_setu24, 2);
   rb_define_method(cDataView, "setU32", t_dv_setu32, 2);
+
   rb_define_method(cDataView, "setBytes", t_dv_setbytes, 2);
 
   rb_define_method(cDataView, "endianess", t_dv_endianess, 0);
