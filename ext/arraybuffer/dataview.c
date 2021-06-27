@@ -6,6 +6,10 @@
 #include <string.h>
 #endif
 
+#ifdef HAVE_RUBY_MEMORY_VIEW_H
+#include <ruby/memory_view.h>
+#endif
+
 extern VALUE cArrayBuffer;
 extern VALUE cDataView;
 
@@ -41,6 +45,39 @@ t_dv_allocator(VALUE klass) {
   dv->flags = 0;
   return Data_Wrap_Struct(klass, t_dv_gc_mark, t_dv_free, dv);
 }
+
+#ifdef HAVE_RUBY_MEMORY_VIEW_H
+static bool
+r_dv_mv_get(VALUE self, rb_memory_view_t *view, int flags) {
+  DECLAREDV(self);
+  if (!dv->size)
+    return 0;
+
+  DECLAREBB(dv->bb_obj);
+
+  char *ptr = (char*)bb->ptr + (size_t)dv->offset;
+
+  rb_memory_view_init_as_byte_array(view, self, ptr, (const ssize_t)dv->size, 0);
+  return 1;
+}
+
+// static bool
+// r_dv_mv_release(VALUE self, rb_memory_view_t *view) {
+//   return 1;
+// }
+
+static bool
+r_dv_mv_available_p(VALUE self) {
+  DECLAREDV(self);
+  return dv->size > 0 ? 1 : 0;
+}
+
+static rb_memory_view_entry_t cDataViewMemoryView = {
+  r_dv_mv_get,
+  NULL, // r_dv_mv_release,
+  r_dv_mv_available_p
+};
+#endif
 
 /*
  * call-seq:
@@ -520,4 +557,8 @@ Init_dataview() {
   rb_define_method(cDataView, "size", t_dv_size, 0);
   rb_define_alias(cDataView, "length", "size");
   rb_define_method(cDataView, "each", t_dv_each, 0);
+
+#ifdef HAVE_RUBY_MEMORY_VIEW_H
+  rb_memory_view_register(cDataView, &cDataViewMemoryView);
+#endif
 }

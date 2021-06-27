@@ -2,6 +2,10 @@
 #include "extconf.h"
 #include <string.h>
 
+#ifdef HAVE_RUBY_MEMORY_VIEW_H
+#include <ruby/memory_view.h>
+#endif
+
 extern VALUE cArrayBuffer;
 
 #define DECLAREBB(self) \
@@ -11,6 +15,34 @@ extern VALUE cArrayBuffer;
   if (!(bb)->ptr || (idx) < 0 || (idx) >= (bb)->size) { \
     rb_raise(rb_eArgError, "Index out of bounds: %d", (idx)); \
   }
+
+#ifdef HAVE_RUBY_MEMORY_VIEW_H
+static bool
+r_bb_mv_get(VALUE self, rb_memory_view_t *view, int flags) {
+  DECLAREBB(self);
+  if (!bb->size)
+    return 0;
+  rb_memory_view_init_as_byte_array(view, self, bb->ptr, (const ssize_t)bb->size, 0);
+  return 1;
+}
+
+// static bool
+// r_bb_mv_release(VALUE self, rb_memory_view_t *view) {
+//   return 1;
+// }
+
+static bool
+r_bb_mv_available_p(VALUE self) {
+  DECLAREBB(self);
+  return bb->size > 0 ? 1 : 0;
+}
+
+static rb_memory_view_entry_t cArrayBufferMemoryView = {
+  r_bb_mv_get,
+  NULL, // r_bb_mv_release,
+  r_bb_mv_available_p
+};
+#endif
 
 static void
 t_bb_gc_mark(struct LLC_ArrayBuffer *bb) {
@@ -156,4 +188,9 @@ Init_arraybuffer() {
   rb_define_method(cArrayBuffer, "each", t_bb_each, 0);
   rb_define_method(cArrayBuffer, "realloc", t_bb_realloc, 1);
   rb_define_method(cArrayBuffer, "bytes", t_bb_bytes, 0);
+  rb_define_method(cArrayBuffer, "to_s", t_bb_bytes, 0);
+
+#ifdef HAVE_RUBY_MEMORY_VIEW_H
+  rb_memory_view_register(cArrayBuffer, &cArrayBufferMemoryView);
+#endif
 }
