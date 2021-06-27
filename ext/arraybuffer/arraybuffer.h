@@ -6,6 +6,7 @@
 struct LLC_ArrayBuffer {
   unsigned char *ptr;
   unsigned int size;
+  VALUE backing_str;
 };
 
 #endif

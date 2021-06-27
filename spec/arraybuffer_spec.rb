@@ -13,6 +13,20 @@ describe ArrayBuffer do
     end
   end
 
+  describe "realloc" do
+    before { set_data! }
+
+    it "has the new size" do
+      buffer.realloc(6)
+      expect(buffer.size).to eq(6)
+    end
+
+    it "still contains the partial content" do
+      buffer.realloc(6)
+      expect(buffer.bytes).to eq(buffer_bytes[0...6])
+    end
+  end
+
   describe "bytes" do
     context "when buffer has data" do
       before { set_data! }

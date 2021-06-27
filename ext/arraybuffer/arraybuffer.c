@@ -46,13 +46,13 @@ static rb_memory_view_entry_t cArrayBufferMemoryView = {
 
 static void
 t_bb_gc_mark(struct LLC_ArrayBuffer *bb) {
+  if (bb->backing_str) {
+    rb_gc_mark(bb->backing_str);
+  }
 }
 
 static void
 t_bb_free(struct LLC_ArrayBuffer *bb) {
-  if (bb->ptr)
-    xfree(bb->ptr);
-
   xfree(bb);
 }
 
@@ -61,8 +61,24 @@ t_bb_allocator(VALUE klass) {
   struct LLC_ArrayBuffer *bb = (struct LLC_ArrayBuffer*)xmalloc(sizeof(struct LLC_ArrayBuffer));
   bb->ptr = NULL;
   bb->size = 0;
+  bb->backing_str = NULL;
 
   return Data_Wrap_Struct(klass, t_bb_gc_mark, t_bb_free, bb);
+}
+
+#define BB_BACKING_PTR(bb) \
+  (FL_TEST((bb)->backing_str, RSTRING_NOEMBED) ? RSTRING((bb)->backing_str)->as.heap.ptr : &RSTRING(bb->backing_str)->as.ary)
+
+static void
+t_bb_reassign_ptr(struct LLC_ArrayBuffer *bb) {
+  if (!bb->backing_str) {
+    bb->ptr = NULL;
+    return;
+  }
+
+  rb_str_set_len(bb->backing_str, bb->size);
+  bb->ptr = BB_BACKING_PTR(bb);
+  bb->ptr[bb->size] = 0;
 }
 
 static VALUE
@@ -70,9 +86,12 @@ t_bb_initialize(VALUE self, VALUE size) {
   DECLAREBB(self);
   unsigned int s = NUM2UINT(size);
   bb->size = s;
-  if (bb->ptr)
-    xfree(bb->ptr);
-  bb->ptr = xmalloc(s);
+  if (bb->backing_str)
+    rb_gc_mark(bb->backing_str);
+
+  bb->backing_str = rb_str_buf_new(s);
+
+  t_bb_reassign_ptr(bb);
   memset(bb->ptr, 0, (size_t)s);
   return self;
 }
@@ -128,31 +147,9 @@ t_bb_realloc(VALUE self, VALUE _new_size) {
   if (new_size == bb->size)
     return self;
 
-  void *old_ptr = (void*)bb->ptr;
-  if (new_size > 0) {
-    char *new_ptr = (void*)xmalloc(new_size);
-    if (old_ptr) {
-      if (new_size > bb->size) {
-        size_t diff = (size_t)(new_size - bb->size);
-        memcpy(new_ptr, old_ptr, (size_t)bb->size);
-        xfree(old_ptr);
-        old_ptr = NULL;
-        memset((char*)new_ptr + (size_t)bb->size, 0, diff);
-      } else {
-        memcpy(new_ptr, old_ptr, (size_t)new_size);
-      }
-    } else {
-      memset(new_ptr, 0, new_size);
-    }
-    bb->size = new_size;
-    bb->ptr = (unsigned char*)new_ptr;
-  } else {
-    bb->size = 0;
-    bb->ptr = NULL;
-  }
-
-  if (old_ptr)
-    xfree(old_ptr);
+  rb_str_resize(bb->backing_str, new_size);
+  bb->size = new_size;
+  t_bb_reassign_ptr(bb);
 
   return self;
 }
@@ -160,8 +157,8 @@ t_bb_realloc(VALUE self, VALUE _new_size) {
 /*
  * Returns a ASCII-8BIT string with the contents of the buffer
  *
- * The returned string is a copy of the buffer. It's encoding is always
- * ASCII-8BIT.
+ * The returned string is the backing string of the buffer.
+ * It's encoding is always ASCII-8BIT.
  * If the buffer has size zero, an empty string is returned.
  *
  * @return [String]
@@ -169,9 +166,7 @@ t_bb_realloc(VALUE self, VALUE _new_size) {
 static VALUE
 t_bb_bytes(VALUE self) {
   DECLAREBB(self);
-  return rb_tainted_str_new(
-    (const char*)bb->ptr,
-    bb->size);
+  return bb->backing_str;
 }
 
 void

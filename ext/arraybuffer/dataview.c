@@ -525,6 +525,17 @@ t_dv_setbytes(VALUE self, VALUE index, VALUE bytes) {
   return self;
 }
 
+VALUE
+t_dv_to_s(VALUE self) {
+  DECLAREDV(self);
+  DECLAREBB(dv->bb_obj);
+
+  const char *ptr = (const char*)bb->ptr + (size_t)dv->offset;
+  size_t len = (size_t)dv->size;
+
+  return rb_str_new(ptr, len);
+}
+
 void
 Init_dataview() {
   idEndianess = rb_intern("endianess");
@@ -557,6 +568,8 @@ Init_dataview() {
   rb_define_method(cDataView, "size", t_dv_size, 0);
   rb_define_alias(cDataView, "length", "size");
   rb_define_method(cDataView, "each", t_dv_each, 0);
+
+  rb_define_method(cDataView, "to_s", t_dv_to_s, 0);
 
 #ifdef HAVE_RUBY_MEMORY_VIEW_H
   rb_memory_view_register(cDataView, &cDataViewMemoryView);
