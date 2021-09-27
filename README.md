@@ -2,7 +2,6 @@
 # arraybuffer gem
 
 ![Tests](https://github.com/andrepiske/rb-arraybuffer/actions/workflows/ci.yml/badge.svg)
-[![CircleCI](https://circleci.com/gh/andrepiske/rb-arraybuffer.svg?style=shield)](https://circleci.com/gh/andrepiske/rb-arraybuffer)
 [![Gem Version](https://badge.fury.io/rb/arraybuffer.svg)](https://badge.fury.io/rb/arraybuffer)
 
 # What?
