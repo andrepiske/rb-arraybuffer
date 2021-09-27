@@ -1,0 +1,44 @@
+name: ci
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '**'
+jobs:
+  test:
+    strategy:
+      fail-fast: true
+      matrix:
+        ruby:
+        - '3.0'
+        - '2.7'
+        - '2.6'
+        os:
+        - ubuntu
+        - macos
+        include:
+        - ruby: head
+          os: ubuntu
+          experimental: true
+        - ruby: head
+          os: macos
+          experimental: true
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+        bundler-cache: false
+    - name: Generate Makefile
+      run: ruby ext/arraybuffer/extconf.rb
+    - name: Compile gem
+      run: make
+    - name: Which bundler?
+      run: bundle -v
+    - name: Bundle install
+      run: bundle install
+    - name: Run rspec
+      run: bundle exec rspec -I.
