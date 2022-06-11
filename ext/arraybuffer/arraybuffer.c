@@ -1,6 +1,7 @@
 #include "arraybuffer.h"
 #include "extconf.h"
 #include <string.h>
+#include <ruby/version.h>
 
 #ifdef HAVE_RUBY_MEMORY_VIEW_H
 #include <ruby/memory_view.h>
@@ -66,8 +67,17 @@ t_bb_allocator(VALUE klass) {
   return Data_Wrap_Struct(klass, t_bb_gc_mark, t_bb_free, bb);
 }
 
-#define BB_BACKING_PTR(bb) \
-  (FL_TEST((bb)->backing_str, RSTRING_NOEMBED) ? RSTRING((bb)->backing_str)->as.heap.ptr : &RSTRING(bb->backing_str)->as.ary)
+#if (RUBY_API_VERSION_CODE >= 30100)
+  // Ruby 3.1 and later
+
+  #define BB_BACKING_PTR(bb) \
+    (FL_TEST((bb)->backing_str, RSTRING_NOEMBED) ? RSTRING((bb)->backing_str)->as.heap.ptr : &RSTRING(bb->backing_str)->as.embed.ary)
+#else
+  // Before ruby 3.1
+
+  #define BB_BACKING_PTR(bb) \
+    (FL_TEST((bb)->backing_str, RSTRING_NOEMBED) ? RSTRING((bb)->backing_str)->as.heap.ptr : &RSTRING(bb->backing_str)->as.ary)
+#endif
 
 static void
 t_bb_reassign_ptr(struct LLC_ArrayBuffer *bb) {

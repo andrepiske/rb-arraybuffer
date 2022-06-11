@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
 
   s.files         = Dir.glob([ "lib/**/*", "ext/**/*", "extconf.h" ])
   s.require_paths = ["lib"]
-  s.version       = "0.0.5"
+  s.version       = "0.0.6"
 
   s.metadata      = {
     "source_code_uri" => "https://github.com/andrepiske/rb-arraybuffer",
@@ -23,4 +23,5 @@ Gem::Specification.new do |s|
   s.required_ruby_version = ">= 2.1"
 
   s.add_development_dependency "rspec", "~> 3.9"
+  s.add_development_dependency "rake-compiler", "~> 1.2"
 end
