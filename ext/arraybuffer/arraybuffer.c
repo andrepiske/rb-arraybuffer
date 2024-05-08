@@ -13,7 +13,7 @@ extern VALUE cArrayBuffer;
   struct LLC_ArrayBuffer *bb = (struct LLC_ArrayBuffer*)rb_data_object_get((self))
 
 #define CHECKBOUNDS(bb, idx) \
-  if (!(bb)->ptr || (idx) < 0 || (idx) >= (bb)->size) { \
+  if (!(bb)->ptr || (idx) < 0 || (unsigned int)(idx) >= (bb)->size) { \
     rb_raise(rb_eArgError, "Index out of bounds: %d", (idx)); \
   }
 
@@ -62,7 +62,7 @@ t_bb_allocator(VALUE klass) {
   struct LLC_ArrayBuffer *bb = (struct LLC_ArrayBuffer*)xmalloc(sizeof(struct LLC_ArrayBuffer));
   bb->ptr = NULL;
   bb->size = 0;
-  bb->backing_str = NULL;
+  bb->backing_str = 0;
 
   return Data_Wrap_Struct(klass, t_bb_gc_mark, t_bb_free, bb);
 }
@@ -71,12 +71,12 @@ t_bb_allocator(VALUE klass) {
   // Ruby 3.1 and later
 
   #define BB_BACKING_PTR(bb) \
-    (FL_TEST((bb)->backing_str, RSTRING_NOEMBED) ? RSTRING((bb)->backing_str)->as.heap.ptr : &RSTRING(bb->backing_str)->as.embed.ary)
+    (FL_TEST((bb)->backing_str, RSTRING_NOEMBED) ? RSTRING((bb)->backing_str)->as.heap.ptr : RSTRING(bb->backing_str)->as.embed.ary)
 #else
   // Before ruby 3.1
 
   #define BB_BACKING_PTR(bb) \
-    (FL_TEST((bb)->backing_str, RSTRING_NOEMBED) ? RSTRING((bb)->backing_str)->as.heap.ptr : &RSTRING(bb->backing_str)->as.ary)
+    (FL_TEST((bb)->backing_str, RSTRING_NOEMBED) ? RSTRING((bb)->backing_str)->as.heap.ptr : RSTRING(bb->backing_str)->as.ary)
 #endif
 
 static void
@@ -87,7 +87,7 @@ t_bb_reassign_ptr(struct LLC_ArrayBuffer *bb) {
   }
 
   rb_str_set_len(bb->backing_str, bb->size);
-  bb->ptr = BB_BACKING_PTR(bb);
+  bb->ptr = (unsigned char*)BB_BACKING_PTR(bb);
   bb->ptr[bb->size] = 0;
 }
 
@@ -139,7 +139,7 @@ t_bb_each(VALUE self) {
   DECLAREBB(self);
 
   if (rb_block_given_p()) {
-    for (int i = 0; i < bb->size; i++) {
+    for (unsigned int i = 0; i < bb->size; i++) {
       unsigned int val = (unsigned int)bb->ptr[i];
       rb_yield(UINT2NUM(val));
     }

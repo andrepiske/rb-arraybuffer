@@ -131,8 +131,8 @@ t_dv_initialize(int argc, VALUE *argv, VALUE self) {
   if (offset_val < 0)
     rb_raise(rb_eArgError, "calculated offset is negative: %d", offset_val);
 
-  dv->offset = (unsigned long)offset_val;
-  dv->size = (unsigned long)size_val;
+  dv->offset = (unsigned int)offset_val;
+  dv->size = (unsigned int)size_val;
   dv->bb_obj = bb_obj;
 
   if (!keyword_ids[0]) {
@@ -214,7 +214,7 @@ t_dv_setoffset(VALUE self, VALUE offset) {
   if (offset_val < 0)
     rb_raise(rb_eArgError, "calculated offset is negative: %d", offset_val);
 
-  dv->offset = (unsigned long)offset_val;
+  dv->offset = (unsigned int)offset_val;
   return self;
 }
 
@@ -237,13 +237,13 @@ t_dv_setsize(VALUE self, VALUE size) {
   if (size_val < 0)
     rb_raise(rb_eArgError, "calculated size is negative: %d", size_val);
 
-  dv->size = (unsigned long)size_val;
+  dv->size = (unsigned int)size_val;
   return self;
 }
 
 #define DECLARENCHECKIDX(index) int idx = NUM2INT(index); \
   if (idx < 0) idx += (int)dv->size; \
-  if (idx < 0 || idx >= dv->size) rb_raise(rb_eArgError, "index out of bounds: %d", idx);
+  if (idx < 0 || idx >= (int)dv->size) rb_raise(rb_eArgError, "index out of bounds: %d", idx);
 
 #define CHECKBOUNDSBB(v) if ((v) < 0 || (v) >= (bb)->size) \
   rb_raise(rb_eArgError, "index out of underlying buffer bounds: %d", (v));
@@ -263,7 +263,7 @@ t_dv_getbit(VALUE self, VALUE index) {
   int idx = NUM2INT(index);
   if (idx < 0)
     idx += (int)dv->size * 8;
-  if (idx < 0 || idx >= dv->size * 8)
+  if (idx < 0 || idx >= (int)dv->size * 8)
     rb_raise(rb_eArgError, "index out of bounds: %d", idx);
 
   unsigned int bit_idx = ((unsigned int)idx) & 7;
